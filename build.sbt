@@ -1,6 +1,6 @@
 name := "matchless"
 
-organization := "com.youdevise"
+organization := "com.timgroup"
 
 // Change to non-SNAPSHOT version to publish a release
 //version := "1.0.0"

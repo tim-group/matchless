@@ -1,7 +1,7 @@
-package com.youdevise.matchless
+package com.timgroup.matchless
 
 import org.specs2.matcher.MustMatchers._
-import com.youdevise.matchless.Collections._
+import com.timgroup.matchless.Collections._
 
 object HasThePairsWorksheet {
   val testMap = Map(

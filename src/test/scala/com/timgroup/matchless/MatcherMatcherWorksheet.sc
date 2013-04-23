@@ -1,7 +1,7 @@
-package com.youdevise.matchless
+package com.timgroup.matchless
 
 import org.specs2.matcher.MustMatchers._
-import com.youdevise.matchless.Matchers._
+import com.timgroup.matchless.Matchers._
 
 object MatcherMatcherWorksheet {
   (contain("foo") must matchTheValue("football")).message

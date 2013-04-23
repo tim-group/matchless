@@ -1,4 +1,4 @@
-package com.youdevise.matchless
+package com.timgroup.matchless
 
 import Collections._
 import Matchers._

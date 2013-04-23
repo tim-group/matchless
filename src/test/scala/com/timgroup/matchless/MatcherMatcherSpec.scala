@@ -1,4 +1,4 @@
-package com.youdevise.matchless
+package com.timgroup.matchless
 
 import Matchers._
 import org.specs2.matcher.MustMatchers._

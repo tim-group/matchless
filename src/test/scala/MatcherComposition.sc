@@ -1,4 +1,4 @@
-package com.youdevise.matchless
+package com.timgroup.matchless
 
 import org.specs2.matcher.MustMatchers._
 import org.specs2.matcher.{MatchResult, Matcher, Expectable}
@@ -8,7 +8,7 @@ object MatcherComposition {
   
   def haveOnlyOneElementLike[T, U](f: PartialFunction[T, MatchResult[U]]) = HaveOnlyOneElementLike(f)
                                                   //> haveOnlyOneElementLike: [T, U](f: PartialFunction[T,org.specs2.matcher.Match
-                                                  //| Result[U]])com.youdevise.matchless.MatcherComposition.HaveOnlyOneElementLike
+                                                  //| Result[U]])com.timgroup.matchless.MatcherComposition.HaveOnlyOneElementLike
                                                   //| [T,U]
   
   List(1, 2, 3) must contain(2, 3)                //> res0: org.specs2.matcher.MatchResult[List[Int]] = MatchSuccess(<function0>,<
