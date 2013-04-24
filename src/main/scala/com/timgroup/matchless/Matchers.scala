@@ -34,6 +34,6 @@ case class MatchTheValue[V](value: V, shouldSucceed: Boolean, maybeMessageMatche
     )
   }
   
-  def withTheMessage(message: String) = this.copy(maybeMessageMatcher = Some(beEqualTo(message)))
+  def withTheMessage(message: String) = withMessageLike(beEqualTo(message))
   def withMessageLike(messageMatcher: Matcher[String]) = this.copy(maybeMessageMatcher = Some(messageMatcher))
 }
