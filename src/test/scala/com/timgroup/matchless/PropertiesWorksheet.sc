@@ -40,10 +40,12 @@ object PropertiesWorksheet {
   val baz = propertyOf[Foo, Int]("baz", _.baz)    //> baz  : com.timgroup.matchless.Properties.NamedProperty[com.timgroup.matchles
                                                   //| s.PropertiesWorksheet.Foo,Int] = NamedProperty(baz,<function1>)
   (foo must haveProperty(bar, "a string")).message//> res4: String = The property <bar> of 'Foo(a string,42,12.3)' was a string
-  
+  (foo must haveProperty(bar).like(contain("strung"))).message
+                                                  //> res5: String = The property <bar> of 'Foo(a string,42,12.3)' doesn't match 
+                                                  //| the expectation: 'a string' doesn't contain 'strung'
   (foo must haveProperties(
     bar -> "a string",
-    baz -> 43)).message                           //> res5: String = The properties of 'Foo(a string,42,12.3)' doesn't match all 
+    baz -> 43)).message                           //> res6: String = The properties of 'Foo(a string,42,12.3)' doesn't match all 
                                                   //| expectations:
                                                   //| 
                                                   //| <bar>: a string
@@ -51,7 +53,7 @@ object PropertiesWorksheet {
 
   (foo must havePropertiesLike(
     bar -> contain("twine"),
-    baz -> greaterThan(42))).message              //> res6: String = The properties of 'Foo(a string,42,12.3)' doesn't match all 
+    baz -> greaterThan(42))).message              //> res7: String = The properties of 'Foo(a string,42,12.3)' doesn't match all 
                                                   //| expectations:
                                                   //| 
                                                   //| * <bar>: 'a string' doesn't contain 'twine'
