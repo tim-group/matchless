@@ -35,7 +35,7 @@ class PropertiesSpec extends Specification {
       )
     } ^
     "does not match if any property is not equal to the literal value" ! {
-      haveProperties(
+      haveProperties[TestClass](
         ("foo", (v: TestClass) => v.foo, "My dinkum for a shroe"),
         ("bar", (v: TestClass) => v.bar, 43)
       ) must failToMatchTheValue(testValue)
@@ -49,11 +49,20 @@ class PropertiesSpec extends Specification {
       )
     } ^
     "does not match if any property is not matched" ! {
-      havePropertiesLike(
+      havePropertiesLike[TestClass](
         ("foo", (v: TestClass) => v.foo, contain("hamlet")),
         ("bar", (v: TestClass) => v.bar, greaterThan(41))
       ) must failToMatchTheValue(testValue)
         .withMessageLike(contain("* <foo>") and not(contain("* <bar>")))
+    } ^ 
+  "Named properties" ^
+    "can be used in the havePropertiesLike matcher" ! {
+      val foo = propertyOf[TestClass, String]("foo", _.foo)
+      val bar = propertyOf[TestClass, Int]("bar", _.bar)
+      
+      testValue must havePropertiesLike(
+        foo -> contain("kingdom"),
+        bar -> greaterThan(41))
     } ^ end
     
 }
