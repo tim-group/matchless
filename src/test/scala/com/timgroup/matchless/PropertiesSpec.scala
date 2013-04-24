@@ -39,7 +39,21 @@ class PropertiesSpec extends Specification {
         ("foo", (v: TestClass) => v.foo, "My dinkum for a shroe"),
         ("bar", (v: TestClass) => v.bar, 43)
       ) must failToMatchTheValue(testValue)
-        .withMessageLike(contain("My dinkum for a shroe") and contain("43"))
+        .withMessageLike(contain("* <foo>") and contain("* <bar>"))
+    } ^ end ^
+  "The hasPropertiesLike matcher" ^
+    "matches if all properties are matched" ! {
+      testValue must havePropertiesLike(
+        ("foo", (v: TestClass) => v.foo, contain("kingdom")),
+        ("bar", (v: TestClass) => v.bar, greaterThan(41))
+      )
+    } ^
+    "does not match if any property is not matched" ! {
+      havePropertiesLike(
+        ("foo", (v: TestClass) => v.foo, contain("hamlet")),
+        ("bar", (v: TestClass) => v.bar, greaterThan(41))
+      ) must failToMatchTheValue(testValue)
+        .withMessageLike(contain("* <foo>") and not(contain("* <bar>")))
     } ^ end
     
 }
