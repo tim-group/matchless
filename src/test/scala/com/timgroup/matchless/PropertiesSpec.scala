@@ -61,7 +61,7 @@ class PropertiesSpec extends Specification {
       val bar = propertyOf[TestClass, Int]("bar", _.bar)
       
       testValue must havePropertiesLike(
-        foo -> contain("kingdomA"),
+        foo -> contain("kingdom"),
         bar -> greaterThan(41))
     } ^ end
     
