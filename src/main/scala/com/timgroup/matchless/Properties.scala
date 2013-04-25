@@ -55,10 +55,10 @@ object Properties {
   def havePropertiesMatching[A](properties: PropertyMatcher[A, _]*): Matcher[A] = new Matcher[A] {
     def apply[S <: A](s: Expectable[S]) = {
       val success = properties.forall(_.apply(s).isSuccess)
-      val report = "The properties of %s %s:\n\n%s".format(
+      val report = "The properties of %s %s:\n%s".format(
         s.description,
         if (success) "were"
-        else "doesn't match all expectations",
+        else "didn't match all expectations",
         properties.map { property =>
           val propertyValue = property.accessor.apply(s.value)
           val matchResult = propertyValue must property.matcher.asInstanceOf[Matcher[Any]]
