@@ -3,8 +3,8 @@ name := "matchless"
 organization := "com.timgroup"
 
 // Change to non-SNAPSHOT version to publish a release
-//version := "1.0.0"
-version := "1.0.1-SNAPSHOT"
+//version := "1.0.1"
+version := "1.0.2-SNAPSHOT"
 
 scalaVersion := "2.9.1"
 
