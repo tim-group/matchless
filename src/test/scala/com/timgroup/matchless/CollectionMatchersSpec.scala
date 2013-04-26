@@ -8,7 +8,7 @@ import org.specs2.Specification
 class CollectionMatchersSpec extends Specification {
   
   def is =
-  "A PairsMatcher" ^
+  "A PairsLikeMatcher" ^
     "matches a map with the required pairs" ! {
       Map(1 -> "one", 2 -> "two", 3 -> "three") must havePairsLike(
         1 -> contain("ne"),
@@ -29,6 +29,18 @@ class CollectionMatchersSpec extends Specification {
         2 -> beEqualTo("two"),
         3 -> contain("ee")
       ) must failToMatchTheValue(Map(1 -> "one", 2 -> "two", 3 -> "four")).withMessageLike(contain("* 3: 'four' doesn't contain 'ee'"))
-    }
+    } ^ end ^
+   bt ^ 
+  "An ItemsLikeMatcher" ^
+    "matches items in any order" ! {
+      Set(1, 2, 3) must haveItemsLike(greaterThan(2), greaterThan(1))
+    } ^
+    "must find one distinct item matching each matcher in order to match" ! {
+      haveItemsLike(greaterThan(1), greaterThan(1)) must failToMatchTheValue(List(1, 2))
+    } ^
+    "can be modified to match items in order" ! {
+      (List(1, 2, 3) must haveItemsLike(greaterThan(1), greaterThan(2))) and
+      (haveItemsLike(greaterThan(2), greaterThan(1)).inOrder must failToMatchTheValue(List(1, 2, 3)))
+    } ^ end
 
 }
