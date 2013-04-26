@@ -3,7 +3,7 @@ package com.timgroup.matchless
 import org.specs2.matcher.{ Matcher, Expectable }
 import org.specs2.matcher.MustMatchers._
 
-object Properties {
+object PropertyMatchers {
   type NamedProperty[A, B] = (String, (A) => B)
   
   def propertyOf[A, B](name: String, accessor: (A) => B): NamedProperty[A, B] = (name, accessor)
@@ -34,4 +34,42 @@ object Properties {
   def havePropertiesLike[A](firstProperty: NamedPropertyWithMatcher[A, _], remainingProperties: NamedPropertyWithMatcher[A, _]*): Matcher[A] =
     PropertiesMatcher((firstProperty :: remainingProperties.toList).map(toPropertyMatcher(_)):_*)
 
+}
+
+case class PropertyMatcher[A, B](name: String, accessor: (A) => B, matcher: Matcher[B]) extends Matcher[A] {
+  def apply[S <: A](s: Expectable[S]) = {
+    val propertyValue = accessor.apply(s.value)
+    val matchResult = propertyValue must matcher
+    val success = matchResult.isSuccess
+    val report = "The property <%s> of %s %s".format(
+      name,
+      s.description,
+      if (success) "was %s".format(propertyValue)
+      else "doesn't match the expectation: %s".format(matchResult.message))
+    result(matchResult.isSuccess,
+      report,
+      report,
+      s)
+  }
+}
+
+case class PropertiesMatcher[A](properties: PropertyMatcher[A, _]*) extends Matcher[A] {
+  def apply[S <: A](s: Expectable[S]) = {
+    val success = properties.forall(_.apply(s).isSuccess)
+    val report = "The properties of %s %s:\n%s".format(
+      s.description,
+      if (success) "were"
+      else "didn't match all expectations",
+      properties.map { property =>
+        val propertyValue = property.accessor.apply(s.value)
+        val matchResult = propertyValue must property.matcher.asInstanceOf[Matcher[Any]]
+        if (matchResult.isSuccess) "<%s>: %s".format(property.name, propertyValue)
+        else "* <%s>: %s".format(property.name, matchResult.message)
+      }.mkString("\n"))
+
+    result(success,
+      report,
+      report,
+      s)
+  }
 }

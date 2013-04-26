@@ -2,13 +2,13 @@ package com.timgroup.matchless
 
 import org.specs2.matcher.Matcher
 import org.specs2.matcher.MustMatchers._
-import com.timgroup.matchless.Properties._
+import com.timgroup.matchless.PropertyMatchers._
 
-object PropertiesWorksheet {
+object PropertyMatchersWorksheet {
   case class Foo(bar: String, baz: Int, xyzzy: Double)
   
-  val foo = Foo("a string", 42, 12.3)             //> foo  : com.timgroup.matchless.PropertiesWorksheet.Foo = Foo(a string,42,12.3
-                                                  //| )
+  val foo = Foo("a string", 42, 12.3)             //> foo  : com.timgroup.matchless.PropertyMatchersWorksheet.Foo = Foo(a string,4
+                                                  //| 2,12.3)
 
   (foo must haveProperty("bar", _.bar, "a string")).message
                                                   //> res0: String = The property <bar> of 'Foo(a string,42,12.3)' was a string
@@ -33,10 +33,10 @@ object PropertiesWorksheet {
                                                   //| <bar>: a string
                                                   //| * <baz>: 42 is equal to 42
                                                   
-  val bar = propertyOf[Foo, String]("bar", _.bar) //> bar  : (String, com.timgroup.matchless.PropertiesWorksheet.Foo => String) = 
-                                                  //| (bar,<function1>)
-  val baz = propertyOf[Foo, Int]("baz", _.baz)    //> baz  : (String, com.timgroup.matchless.PropertiesWorksheet.Foo => Int) = (ba
-                                                  //| z,<function1>)
+  val bar = propertyOf[Foo, String]("bar", _.bar) //> bar  : (String, com.timgroup.matchless.PropertyMatchersWorksheet.Foo => Stri
+                                                  //| ng) = (bar,<function1>)
+  val baz = propertyOf[Foo, Int]("baz", _.baz)    //> baz  : (String, com.timgroup.matchless.PropertyMatchersWorksheet.Foo => Int)
+                                                  //|  = (baz,<function1>)
   (foo must haveProperty(bar, "a string")).message//> res4: String = The property <bar> of 'Foo(a string,42,12.3)' was a string
   (foo must haveProperty(bar).like(contain("strung"))).message
                                                   //> res5: String = The property <bar> of 'Foo(a string,42,12.3)' doesn't match 

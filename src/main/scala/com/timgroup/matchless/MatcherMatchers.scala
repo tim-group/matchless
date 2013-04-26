@@ -3,7 +3,7 @@ package com.timgroup.matchless
 import org.specs2.matcher.{Matcher, Expectable}
 import org.specs2.matcher.MustMatchers._
 
-object Matchers {
+object MatcherMatchers {
   def matchTheValue[V](value: V) = MatchTheValue(value, true)
   def failToMatchTheValue[V](value: V) = MatchTheValue(value, false)
 }

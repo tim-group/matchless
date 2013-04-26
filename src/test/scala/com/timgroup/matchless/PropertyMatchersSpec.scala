@@ -1,11 +1,11 @@
 package com.timgroup.matchless
 
-import Properties._
-import Matchers._
+import PropertyMatchers._
+import MatcherMatchers._
 import org.specs2.matcher.MustMatchers._
 import org.specs2.Specification
 
-class PropertiesSpec extends Specification {
+class PropertyMatchersSpec extends Specification {
   
   case class TestClass(foo: String, bar: Int)
   val testValue = TestClass("My kingdom for a horse", 42)
@@ -27,7 +27,7 @@ class PropertiesSpec extends Specification {
       haveProperty("foo", (v: TestClass) => v.foo).like(contain("giraffe")) must failToMatchTheValue(testValue)
         .withMessageLike(contain("The property <foo> of 'TestClass(My kingdom for a horse,42)' doesn't match the expectation"))
     } ^ end ^
-  "The hasProperties matcher" ^
+  "The haveProperties matcher" ^
     "matches if all properties are equal to the literal values" ! {
       testValue must haveProperties(
         ("foo", (v: TestClass) => v.foo) -> "My kingdom for a horse",
@@ -41,7 +41,7 @@ class PropertiesSpec extends Specification {
       ) must failToMatchTheValue(testValue)
         .withMessageLike(contain("* <foo>") and contain("* <bar>"))
     } ^ end ^
-  "The hasPropertiesLike matcher" ^
+  "The havePropertiesLike matcher" ^
     "matches if all properties are matched" ! {
       testValue must havePropertiesLike(
         ("foo", (v: TestClass) => v.foo) -> contain("kingdom"),

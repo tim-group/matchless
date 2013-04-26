@@ -1,6 +1,6 @@
 package com.timgroup.matchless
 
-import Matchers._
+import MatcherMatchers._
 import org.specs2.matcher.MustMatchers._
 import org.specs2.Specification
 

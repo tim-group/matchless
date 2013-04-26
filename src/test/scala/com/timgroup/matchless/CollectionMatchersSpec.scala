@@ -1,14 +1,14 @@
 package com.timgroup.matchless
 
-import Collections._
-import Matchers._
+import CollectionMatchers._
+import MatcherMatchers._
 import org.specs2.matcher.MustMatchers._
 import org.specs2.Specification
 
-class HavePairsLikeSpec extends Specification {
+class CollectionMatchersSpec extends Specification {
   
   def is =
-  "A HavePairsLike matcher" ^
+  "A PairsMatcher" ^
     "matches a map with the required pairs" ! {
       Map(1 -> "one", 2 -> "two", 3 -> "three") must havePairsLike(
         1 -> contain("ne"),

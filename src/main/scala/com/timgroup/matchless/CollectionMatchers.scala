@@ -3,7 +3,12 @@ package com.timgroup.matchless
 import org.specs2.matcher.{Matcher, Expectable}
 import org.specs2.matcher.MustMatchers._
 
-case class HavePairsLike[K, V](pairMatchers: Map[K, Matcher[V]]) extends Matcher[Map[K, V]] {
+object CollectionMatchers {
+  def haveThePairs[K, V](pairs: (K, V)*) = PairsMatcher(pairs.map( p => (p._1, beEqualTo(p._2))).toMap)
+  def havePairsLike[K, V](pairs: (K, Matcher[V])*) = PairsMatcher(pairs.toMap)
+}
+
+case class PairsMatcher[K, V](pairMatchers: Map[K, Matcher[V]]) extends Matcher[Map[K, V]] {
   def apply[S <: Map[K, V]](s: Expectable[S]) = {
     val sharedKeys = pairMatchers.keySet.intersect(s.value.keySet)
     val missingKeys = pairMatchers.keySet.diff(s.value.keySet)
