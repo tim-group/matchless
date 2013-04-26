@@ -30,28 +30,28 @@ class PropertiesSpec extends Specification {
   "The hasProperties matcher" ^
     "matches if all properties are equal to the literal values" ! {
       testValue must haveProperties(
-        ("foo", (v: TestClass) => v.foo, "My kingdom for a horse"),
-        ("bar", (v: TestClass) => v.bar, 42)
+        ("foo", (v: TestClass) => v.foo) -> "My kingdom for a horse",
+        ("bar", (v: TestClass) => v.bar) -> 42
       )
     } ^
     "does not match if any property is not equal to the literal value" ! {
       haveProperties[TestClass](
-        ("foo", (v: TestClass) => v.foo, "My dinkum for a shroe"),
-        ("bar", (v: TestClass) => v.bar, 43)
+        ("foo", (v: TestClass) => v.foo) -> "My dinkum for a shroe",
+        ("bar", (v: TestClass) => v.bar) -> 43
       ) must failToMatchTheValue(testValue)
         .withMessageLike(contain("* <foo>") and contain("* <bar>"))
     } ^ end ^
   "The hasPropertiesLike matcher" ^
     "matches if all properties are matched" ! {
       testValue must havePropertiesLike(
-        ("foo", (v: TestClass) => v.foo, contain("kingdom")),
-        ("bar", (v: TestClass) => v.bar, greaterThan(41))
+        ("foo", (v: TestClass) => v.foo) -> contain("kingdom"),
+        ("bar", (v: TestClass) => v.bar) -> greaterThan(41)
       )
     } ^
     "does not match if any property is not matched" ! {
       havePropertiesLike[TestClass](
-        ("foo", (v: TestClass) => v.foo, contain("hamlet")),
-        ("bar", (v: TestClass) => v.bar, greaterThan(41))
+        ("foo", (v: TestClass) => v.foo) -> contain("hamlet"),
+        ("bar", (v: TestClass) => v.bar) -> greaterThan(41)
       ) must failToMatchTheValue(testValue)
         .withMessageLike(contain("* <foo>") and not(contain("* <bar>")))
     } ^ 
