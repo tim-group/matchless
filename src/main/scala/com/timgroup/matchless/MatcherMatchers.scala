@@ -3,10 +3,12 @@ package com.timgroup.matchless
 import org.specs2.matcher.{Matcher, Expectable}
 import org.specs2.matcher.MustMatchers._
 
-object MatcherMatchers {
+trait MatcherMatchers {
   def matchTheValue[V](value: V) = MatchTheValue(value, true)
   def failToMatchTheValue[V](value: V) = MatchTheValue(value, false)
 }
+
+object MatcherMatchers extends MatcherMatchers
 
 case class MatchTheValue[V](value: V, shouldSucceed: Boolean, maybeMessageMatcher: Option[Matcher[String]] = None) extends Matcher[Matcher[V]] {
   def apply[S <: Matcher[V]](s: Expectable[S]) = {

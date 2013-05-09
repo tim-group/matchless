@@ -3,12 +3,15 @@ package com.timgroup.matchless
 import org.specs2.matcher.{ Matcher, Expectable }
 import org.specs2.matcher.MustMatchers._
 import scala.collection.GenTraversableOnce
+import com.timgroup.matchless.utils.Bag
 
-object CollectionMatchers {
+trait CollectionMatchers {
   def haveThePairs[K, V](pairs: (K, V)*) = PairsLikeMatcher(pairs.map(p => (p._1, beEqualTo(p._2))).toMap)
   def havePairsLike[K, V](pairs: (K, Matcher[V])*) = PairsLikeMatcher(pairs.toMap)
   def haveItemsLike[A](itemMatchers: Matcher[A]*) = ItemsLikeMatcher(itemMatchers.toList)
 }
+
+object CollectionMatchers extends CollectionMatchers
 
 case class PairsLikeMatcher[K, V](pairMatchers: Map[K, Matcher[V]]) extends Matcher[Map[K, V]] {
   def apply[S <: Map[K, V]](s: Expectable[S]) = {
@@ -43,8 +46,8 @@ case class ItemsLikeMatcher[A](matchers: Iterable[Matcher[A]]) extends Matcher[G
       } yield matcher -> value).groupBy(_._1).mapValues(_.map(_._2))
       if (matches.size < matchers.size) result(false, "", "Some of the expected items were not present in the collection", s)
       else {
-        val search = matches.values.toList.sortBy(_.size).map(m => Bag(m.groupBy(identity).mapValues(_.size)))
-        val uniqueMatches = findUnique(search.head, Bag(Map.empty), search.tail)
+        val search = matches.values.toList.sortBy(_.size).map(Bag(_))
+        val uniqueMatches = findUnique(search.head, Bag.empty, search.tail)
         uniqueMatches match {
           case None => result(false, "", "No set of items in the collection uniquely matched the supplied matchers", s)
           case Some(matches) => result(true, "The items %s uniquely matched the supplied matchers".format(matches), "", s)
@@ -55,46 +58,19 @@ case class ItemsLikeMatcher[A](matchers: Iterable[Matcher[A]]) extends Matcher[G
 
   def inOrder = ItemsLikeInOrderMatcher(matchers)
 
-  private[this] def findUnique(current: Bag[A], claimed: Bag[A], remaining: List[Bag[A]]): Option[List[A]] =
+  private[this] def findUnique(current: Bag[A], claimed: Bag[A], remaining: List[Bag[A]]): Option[Bag[A]] =
     remaining match {
-      case Nil => current.headOption.map(claimed.add(_).toList)
+      case Nil => current.headOption.map(claimed + _)
       case l if l.exists(_.isEmpty) => None
       case h :: t =>
         if (current.isEmpty) None
         else {
           val x = current.head
-          val xs = current.remove(x)
-          findUnique(h.remove(x), claimed.add(x), t.map(_.remove(x)))
+          val xs = current - x
+          findUnique(h - x, claimed + x, t.map(_ - x))
             .orElse(findUnique(xs, claimed, remaining))
         }
     }
-
-  private case class Bag[A](elements: Map[A, Int]) {
-    def isEmpty = elements.isEmpty
-
-    def remove(element: A) =
-      elements.get(element) match {
-        case None => this
-        case Some(1) => Bag(elements - element)
-        case Some(c) => Bag(elements.updated(element, c - 1))
-      }
-
-    def add(element: A) =
-      elements.get(element) match {
-        case None => Bag(elements + (element -> 1))
-        case Some(c) => Bag(elements.updated(element, c + 1))
-      }
-
-    def toList: List[A] = (for {
-      (e, c) <- elements
-      _ <- 1 to c
-    } yield e).toList
-
-    def headOption: Option[A] = elements.headOption.map(_._1)
-    def head: A = elements.head._1
-    def tail: Bag[A] = this.remove(head)
-  }
-
 }
 
 case class ItemsLikeInOrderMatcher[A](matchers: Iterable[Matcher[A]]) extends Matcher[GenTraversableOnce[A]] {

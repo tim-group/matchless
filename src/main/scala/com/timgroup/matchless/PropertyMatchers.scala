@@ -3,7 +3,7 @@ package com.timgroup.matchless
 import org.specs2.matcher.{ Matcher, Expectable }
 import org.specs2.matcher.MustMatchers._
 
-object PropertyMatchers {
+trait PropertyMatchers {
   type NamedProperty[A, B] = (String, (A) => B)
   
   def propertyOf[A, B](name: String, accessor: (A) => B): NamedProperty[A, B] = (name, accessor)
@@ -35,6 +35,8 @@ object PropertyMatchers {
     PropertiesMatcher((firstProperty :: remainingProperties.toList).map(toPropertyMatcher(_)):_*)
 
 }
+
+object PropertyMatchers extends PropertyMatchers
 
 case class PropertyMatcher[A, B](name: String, accessor: (A) => B, matcher: Matcher[B]) extends Matcher[A] {
   def apply[S <: A](s: Expectable[S]) = {
