@@ -9,13 +9,11 @@ object Lenses {
   type Reduction[A, B] = (A, B) => A
   type Reducible[A, B] = B => A
   type Update[A] = A => A
-  type State[S, A] = S => (S, A)
   
   sealed case class EnrichedProjection[A, B](projection: Projection[A, B]) {
     def ~[C](other: Projection[B, C]): Projection[A, C] = projection andThen other
     def bind(target: A): Projectable[B] = () => projection(target)
     def reducingWith(reduction: Reduction[A, B]): Lens[A, B] = Lens(projection, reduction)
-    def ? = state((s: A) => (s, projection(s)))
   }
 
   implicit def projection2EnrichedProjection[A, B](projection: A => B): EnrichedProjection[A, B] =
@@ -48,10 +46,11 @@ object Lenses {
 
     def bind(target: A): Cell[A, B] = Cell(target, this)
     
-    def ? = state((s: A) => (s, projection(s)))
     def :=(value: B) = state((s: A) => (reduction(s, value), ()))
     def /=(updater: Update[B]) = state((s: A) => (update(s, updater), ()))
   }
+  
+  implicit def projection2State[A, B](projection: A => B): State[A, B] = state((s: A) => (s, projection(s)))
   
   sealed case class Cell[A, B](target: A, lens: Lens[A, B]) extends Projectable[B] with Reducible[A, B] {
     override def apply() = lens(target)
