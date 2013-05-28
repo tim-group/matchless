@@ -16,3 +16,9 @@ project/plugins/project/
 # IntelliJ specific
 .idea/
 .idea_modules/
+
+.cache
+.classpath
+.project
+.settings/
+.worksheet/
