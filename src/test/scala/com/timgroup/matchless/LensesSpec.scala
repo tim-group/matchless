@@ -14,7 +14,7 @@ class LensesSpec extends Specification {
   val bazP = grinder.projection(_.baz)
   val charAt = (i: Int) => (_: String)(i)
   val barL = (barP, barR)
-  val bazL = grinder.lens(_.baz, (t, v: String) => t.copy(baz = v))
+  val bazL = grinder.lens[String](_.baz, (t, v) => t.copy(baz = v))
 
   def is =
     "Lenses are composable" ! {
