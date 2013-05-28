@@ -13,7 +13,7 @@ class LensesSpec extends Specification {
   val barR = grinder.reduction[Int]((t, v) => t.copy(bar = v))
   val bazP = grinder.projection(_.baz)
   val charAt = (i: Int) => (_: String)(i)
-  val barL = (barP, barR)
+  val barL = Lens(barP, barR)
   val bazL = grinder.lens[String](_.baz, (t, v) => t.copy(baz = v))
 
   def is =
@@ -49,6 +49,17 @@ class LensesSpec extends Specification {
           _ <- barR := bar + 7
           _ <- bazL /= (_ + " " + bar)
         } yield None) ~> foo) must_== Foo(8, "apple 1")
+      } ^
+      "Lens monads compose" ! {
+        val combined = (for {
+          i      <- barL
+          aIsFor <- (bazP ~ charAt(1))
+        } yield aIsFor + i.toString) ! _
+        
+        (for {
+          c <- combined
+          baz <- bazL
+        } yield (c, baz)) ! foo must_== ("p1", "apple")
       }
 
 }
