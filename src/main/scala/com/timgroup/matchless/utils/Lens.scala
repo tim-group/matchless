@@ -1,72 +1,69 @@
 package com.timgroup.matchless.utils
 
+import States._
+
 object Lenses {
-  trait Bindable[A, B] {
-    def bind(target: A): B
+  
+  type Projection[A, B] = A => B
+  type Projectable[A] = () => A
+  type Reduction[A, B] = (A, B) => A
+  type Reducible[A, B] = B => A
+  type Update[A] = A => A
+  type State[S, A] = S => (S, A)
+  
+  sealed case class EnrichedProjection[A, B](projection: Projection[A, B]) {
+    def ~[C](other: Projection[B, C]): Projection[A, C] = projection andThen other
+    def bind(target: A): Projectable[B] = () => projection(target)
+    def reducingWith(reduction: Reduction[A, B]): Lens[A, B] = Lens(projection, reduction)
+    def ? = state((s: A) => (s, projection(s)))
   }
-  
-  trait Reader[A, B] extends Function[A, B] {
-    def ~[C](reader: Reader[B, C]): BindableReader[A, C] = reader compose this
-  }
-  
-  type Readable[A] = () => A
-  
-  trait BindableReader[A, B] extends Reader[A, B] with Bindable[A, Readable[B]]
-  
-  private[this] case class FunctionReader[A, B](f: A => B) extends BindableReader[A, B] {
-    override def apply(target: A): B = f(target)
-    override def bind(target: A): Readable[B] = () => this(target)
-  }
-  
-  implicit def readerFunction2Reader[A, B](f: A => B): BindableReader[A, B] =
-    FunctionReader[A, B](f)
 
-  trait Writer[A, B] extends Function2[A, B, A] {
-    def readingWith(reader: Reader[A, B]): Lens[A, B] = Lens(reader, this)
+  implicit def projection2EnrichedProjection[A, B](projection: A => B): EnrichedProjection[A, B] =
+    EnrichedProjection(projection)
+
+  sealed case class EnrichedReduction[A, B](reduction: Reduction[A, B]) {
+    def projectingWith(projection: Projection[A, B]): Lens[A, B] = Lens(projection, reduction)
+    def bind(target: A): Reducible[A, B] = (newValue) => reduction(target, newValue)
+    def :=(value: B) = state((s: A) => (reduction(s, value), ()))
   }
-  
-  type Writable[A, B] = B => A
-  
-  trait BindableWriter[A, B] extends Writer[A, B] with Bindable[A, Writable[A, B]]
+
+  implicit def reduction2EnrichedReduction[A, B](reduction: (A, B) => A) = EnrichedReduction[A, B](reduction)
+
+  implicit def projectionAndReduction2Lens[A, B](tuple: (Projection[A, B], Reduction[A, B])): Lens[A, B] =
+    Lens(tuple._1, tuple._2)
+
+  sealed case class Lens[A, B](projection: Projection[A, B], reduction: Reduction[A, B])
+    extends Projection[A, B] with Reduction[A, B] {
+
+    override def apply(a: A): B = projection(a)
+    override def apply(target: A, newValue: B): A = reduction(target, newValue)
+
+    def update(target: A, update: Update[B]): A = reduction(target, update(projection(target)))
+
+    def ~[C](other: Projection[B, C]): Projection[A, C] = projection ~ other
+    def ~[C](reduction: Reduction[B, C]): Reduction[A, C] = (target: A, newValue: C) =>
+      update(target, target2 => reduction(target2, newValue))
+
+    def ~[C](lens: Lens[B, C]): Lens[A, C] = (this ~ lens.projection, this ~ lens.reduction)
+
+    def bind(target: A): Cell[A, B] = Cell(target, this)
     
-  private[this] case class FunctionWriter[A, B](f: (A, B) => A) extends BindableWriter[A, B] {
-    override def apply(target: A, newValue: B): A = f(target, newValue)
-    override def bind(target: A): Writable[A, B] = (newValue) => this(target, newValue)
+    def ? = state((s: A) => (s, projection(s)))
+    def :=(value: B) = state((s: A) => (reduction(s, value), ()))
+    def /=(updater: Update[B]) = state((s: A) => (update(s, updater), ()))
   }
   
-  implicit def writerFunction2Writer[A, B](f: (A, B) => A): BindableWriter[A, B] =
-    FunctionWriter[A, B](f)
-
-  implicit def lensFunctions2Lens[A, B](tuple: (A => B, (A, B) => A)): Lens[A, B] = Lens(tuple._1, tuple._2)
-
-  trait Cell[A, B] extends Readable[B] with Writable[A, B] {
-    def update(f: B => B): A = this(f(this.apply))
+  sealed case class Cell[A, B](target: A, lens: Lens[A, B]) extends Projectable[B] with Reducible[A, B] {
+    override def apply() = lens(target)
+    override def apply(newValue: B) = lens(target, newValue)
+    def update(update: Update[B]): A = lens.update(target, update)
     def value = update(identity)
   }
   
-  trait Updater[A, B] { self: Reader[A, B] with Writer[A, B] =>
-    def update(target: A, f: B => B): A = this(target, f(this(target)))
-  }
-  
-  case class Lens[A, B](reader: Reader[A, B], writer: Writer[A, B]) extends Reader[A, B] with Writer[A, B] with Updater[A, B] with Bindable[A, Cell[A, B]] {
-    override def apply(a: A): B = reader(a)
-    override def apply(target: A, newValue: B): A = writer(target, newValue)
-
-    def ~[C](writer: Writer[B, C]): BindableWriter[A, C] = (target: A, newValue: C) =>
-      update(target, target2 => writer(target2, newValue))
-      
-    def ~[C](lens: Lens[B, C]): Lens[A, C] = (this ~ lens.reader, this ~ lens.writer)
-    
-    override def bind(target: A): Cell[A, B] = new Cell[A, B] {
-      override def apply() = reader(target)
-      override def apply(newValue: B) = writer(target, newValue)
-    }
-  }
-  
-  case class LensGrinder[A]() {
-    def reader[B](f: A => B): BindableReader[A, B] = f
-    def writer[B](f: (A, B) => A): BindableWriter[A, B] = f
-    def lens[B](reader: A => B, writer: (A, B) => A): Lens[A, B] = (reader, writer)
+  sealed case class LensGrinder[A]() {
+    def projection[B](projection: Projection[A, B]) = projection
+    def reduction[B](reduction: Reduction[A, B]) = reduction
+    def lens[B](projection: Projection[A, B], reduction: Reduction[A, B]): Lens[A, B] = Lens(projection, reduction)
   }
 
 }

@@ -9,11 +9,12 @@ class LensesSpec extends Specification {
   case class Foo(bar: Int, baz: String)
   val foo = Foo(1, "apple")
   val grinder = LensGrinder[Foo]
-  val barReader = grinder.reader(_.bar)
-  val barWriter = grinder.writer[Int]((t, v) => t.copy(bar = v))
-  val bazReader = grinder.reader(_.baz)
+  val barReader = grinder.projection(_.bar)
+  val barWriter = grinder.reduction[Int]((t, v) => t.copy(bar = v))
+  val bazReader = grinder.projection(_.baz)
   val charAt = (i:Int) => (_:String)(i)  
-  val barLens = (barReader, barWriter) 
+  val barLens = (barReader, barWriter)
+  val bazLens = grinder.lens(_.baz, (t, v: String) => t.copy(baz = v))
   
   def is =
   "Lenses are composable" ! {
@@ -40,6 +41,16 @@ class LensesSpec extends Specification {
     (bound(3) must_== Foo(3, "apple")) and
     (bound.update(_ * 7) must_== Foo(7, "apple")) and
     (bound.value must_== Foo(1, "apple"))
-  }
-  
+  } ^
+  "Lenses can be applied in a monad" ! {
+    val fooUpdater = for {
+      bar <- barReader.?
+      baz <- bazReader.?
+      _   <- barWriter := bar + 7
+      _   <- bazLens /= (_ + " " + bar)
+      } yield None
+      
+      (fooUpdater ~> foo) must_== Foo(8, "apple 1")
+   }
+
 }
