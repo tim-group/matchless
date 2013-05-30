@@ -4,7 +4,7 @@ organization := "com.timgroup"
 
 // Change to non-SNAPSHOT version to publish a release
 //version := "1.0.2"
-version := "1.0.5-SNAPSHOT5-SNAPSHOT5-SNAPSHOT5-SNAPSHOT5-SNAPSHOT"
+version := "1.0.5-SNAPSHOT"
 
 scalaVersion := "2.9.2"
 
