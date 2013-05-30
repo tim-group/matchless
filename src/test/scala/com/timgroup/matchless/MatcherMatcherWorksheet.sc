@@ -1,7 +1,7 @@
 package com.timgroup.matchless
 
 import org.specs2.matcher.MustMatchers._
-import com.timgroup.matchless.Matchers._
+import com.timgroup.matchless.MatcherMatchers._
 
 object MatcherMatcherWorksheet {
   (contain("foo") must matchTheValue("football")).message
