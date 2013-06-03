@@ -2,9 +2,8 @@ name := "matchless"
 
 organization := "com.timgroup"
 
-// Change to non-SNAPSHOT version to publish a release
-//version := "1.0.2"
-version := "1.0.5"
+// Change to non-SNAPSHOT version when you publish a release
+version := "1.0.6-SNAPSHOT"
 
 scalaVersion := "2.10.0"
 
@@ -62,7 +61,7 @@ pomExtra := (
 
 // NOTE (2013-04-23, Marc): To publish to Sonatype:
 //
-// 1. Install sbt-extras as ~/bin/sbt-extras.sh, to handle multiple versions of sbt gracefully
+// 1. Install sbt-extras as ~/bin/sbt-extras.sh, to handle multiple versions of sbt gracefully (if not already puppeted to your machine)
 //      https://github.com/paulp/sbt-extras
 //
 // 2. Generate and publish your GPG key
@@ -83,9 +82,10 @@ pomExtra := (
 //       For snapshot versions: 1.0.0-SNAPSHOT
 //       For releases: 1.0.0
 //
-// 6. Deploy and Stage to Sonatype
-//       sbt-extras.sh clean publish-signed            // scalaVersion as configured above
+// 6. Deploy and Stage to Sonatype for all desired Scala versions
+//       sbt-extras.sh ++2.9.1 clean publish-signed    // scalaVersion given on command line
 //       sbt-extras.sh ++2.9.2 clean publish-signed    // scalaVersion given on command line
+//       sbt-extras.sh ++2.10.0 clean publish-signed   // scalaVersion given on command line
 //
 // 7. Manually release it to Maven Central
 //       https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide#SonatypeOSSMavenRepositoryUsageGuide-8a.ReleaseIt
