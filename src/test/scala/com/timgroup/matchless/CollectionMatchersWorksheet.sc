@@ -48,18 +48,19 @@ object CollectionMatchersWorksheet extends CollectionMatchers {
                                                   //| 
                                                   
   (List(1, 2, 3) must haveItemsLike(equalTo(3), equalTo(2), equalTo(1)).inOrder).message
-                                                  //> res5: String = Some of the expected items were not present in the collectio
-                                                  //| n
+                                                  //> res5: String = The expected items were not present in the collection in the
+                                                  //|  expected order
   
   (List(1, 2, 3) must haveItemsLike(equalTo(3), equalTo(2)).strictly).message
                                                   //> res6: String = Expected 2 items, but found 3
                                                   
   (List(1, 2, 3) must haveItemsLike(equalTo(1), equalTo(2)).inOrder).message
-                                                  //> res7: String = The items %s matched the supplied matchers in order
+                                                  //> res7: String = The items List(1, 2, 3) matched the supplied matchers in ord
+                                                  //| er
   (List(1, 2, 3) must haveItemsLike(equalTo(1), equalTo(2)).inOrder.strictly).message
                                                   //> res8: String = Expected 2 items, but found 3
   
   (List(1, 2, 3) must haveItemsLike(equalTo(3), equalTo(2), equalTo(1)).strictly.inOrder).message
-                                                  //> res9: String = Some of the expected items were not present in the collectio
-                                                  //| n
+                                                  //> res9: String = The expected items were not present in the collection in the
+                                                  //|  expected order
 }
