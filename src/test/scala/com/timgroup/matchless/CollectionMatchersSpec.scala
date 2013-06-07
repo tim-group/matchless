@@ -41,6 +41,14 @@ class CollectionMatchersSpec extends Specification {
     "can be modified to match items in order" ! {
       (List(1, 2, 3) must haveItemsLike(greaterThan(1), greaterThan(2))) and
       (haveItemsLike(greaterThan(2), greaterThan(1)).inOrder must failToMatchTheValue(List(1, 2, 3)))
-    } ^ end
+    } ^ 
+    "can be made strict" ! {
+      (List(1, 2, 3) must haveItemsLike(equalTo(1), equalTo(2))) and
+      (haveItemsLike(equalTo(1), equalTo(2)).strictly must failToMatchTheValue(List(1, 2, 3)))
+    } ^
+    "can be made strict and ordered" ! {
+      (List(1, 2, 3) must haveItemsLike(equalTo(3), equalTo(2), equalTo(1)).strictly) and
+      (haveItemsLike(equalTo(3), equalTo(2), equalTo(1)).strictly.inOrder must failToMatchTheValue(List(1, 2, 3)))
+    }
 
 }

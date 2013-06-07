@@ -36,8 +36,31 @@ case class PairsLikeMatcher[K, V](pairMatchers: Map[K, Matcher[V]]) extends Matc
   }
 }
 
-case class ItemsLikeMatcher[A](matchers: Iterable[Matcher[A]]) extends Matcher[GenTraversableOnce[A]] {
-  def apply[S <: GenTraversableOnce[A]](s: Expectable[S]) = {
+trait Orderable[A] { self: Matcher[GenTraversableOnce[A]] =>
+  def inOrder: Matcher[GenTraversableOnce[A]]
+}
+
+trait Lenient[A] { self: Matcher[GenTraversableOnce[A]] =>
+  val matchers: Iterable[Matcher[A]]
+
+  def strictly = new Matcher[GenTraversableOnce[A]] with Orderable[A] {
+    override def apply[S <: GenTraversableOnce[A]](s: Expectable[S]) = makeStrict(matchers, self).apply(s)
+    override def inOrder = makeStrict(matchers, ItemsLikeInOrderMatcher(matchers))
+    
+    def makeStrict(matchers: Iterable[Matcher[A]], innerMatcher: Matcher[GenTraversableOnce[A]]) =
+      new Matcher[GenTraversableOnce[A]] {
+        override def apply[S <: GenTraversableOnce[A]](s: Expectable[S]) = {
+          if (matchers.size !== s.value.size)
+            result(false, "", "Expected %s items, but found %s".format(matchers.size, s.value.size), s)
+          else innerMatcher(s)
+        }
+      }
+  }
+}
+
+case class ItemsLikeMatcher[A](matchers: Iterable[Matcher[A]]) extends Matcher[GenTraversableOnce[A]]
+  with Lenient[A] with Orderable[A] {
+  override def apply[S <: GenTraversableOnce[A]](s: Expectable[S]) = {
     if (s.value.size < matchers.size) result(false, "", "Not enough items to find a unique match for every matcher", s)
     else {
       val matches = (for {
@@ -56,8 +79,6 @@ case class ItemsLikeMatcher[A](matchers: Iterable[Matcher[A]]) extends Matcher[G
     }
   }
 
-  def inOrder = ItemsLikeInOrderMatcher(matchers)
-
   private[this] def findUnique(current: Bag[A], claimed: Bag[A], remaining: List[Bag[A]]): Option[Bag[A]] =
     remaining match {
       case Nil => current.headOption.map(claimed + _)
@@ -71,9 +92,11 @@ case class ItemsLikeMatcher[A](matchers: Iterable[Matcher[A]]) extends Matcher[G
             .orElse(findUnique(xs, claimed, remaining))
         }
     }
+
+  override def inOrder = ItemsLikeInOrderMatcher(matchers)
 }
 
-case class ItemsLikeInOrderMatcher[A](matchers: Iterable[Matcher[A]]) extends Matcher[GenTraversableOnce[A]] {
+case class ItemsLikeInOrderMatcher[A](matchers: Iterable[Matcher[A]]) extends Matcher[GenTraversableOnce[A]] with Lenient[A] {
   def apply[S <: GenTraversableOnce[A]](s: Expectable[S]) = {
     def checkMatchers(matchers: Iterable[Matcher[A]], values: GenTraversableOnce[A]): Boolean =
       matchers match {
@@ -84,8 +107,8 @@ case class ItemsLikeInOrderMatcher[A](matchers: Iterable[Matcher[A]]) extends Ma
         }
       }
     result(checkMatchers(matchers, s.value),
-      "The items %s matched the supplied matchers in order",
-      "Some of the expected items were not present in the collection",
+      "The items %s matched the supplied matchers in order".format(s.value),
+      "The expected items were not present in the collection in the expected order",
       s)
   }
 }
