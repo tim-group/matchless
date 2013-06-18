@@ -60,6 +60,34 @@ class LensesSpec extends Specification {
           c <- combined
           baz <- bazL
         } yield (c, baz)) ! foo must_== ("p1", "apple")
+      } ^
+      "Lenses have products" ! {
+        val fooAndBazL = barL * bazL
+        (fooAndBazL(foo) must_== (1, "apple")) and
+        (fooAndBazL(foo, (2, "pear")) must_== Foo(2, "pear"))
+      } ^
+      "Lenses have 3-products" ! {
+        case class ABC(a: String, b: String, c: String)
+        val aL = Lens[ABC, String](_.a, (s, v) => s.copy(a = v))
+        val bL = Lens[ABC, String](_.b, (s, v) => s.copy(b = v))
+        val cL = Lens[ABC, String](_.c, (s, v) => s.copy(c = v))
+        val abcL = aL * bL * cL
+        
+        val abc = ABC("a", "b", "c")
+        (abcL(abc) must_== ("a", "b", "c")) and
+        (abcL(abc, ("d", "e", "f")) must_== ABC("d", "e", "f"))
+      } ^
+      "Lenses have 4-products" ! {
+        case class ABCD(a: String, b: String, c: String, d: String)
+        val aL = Lens[ABCD, String](_.a, (s, v) => s.copy(a = v))
+        val bL = Lens[ABCD, String](_.b, (s, v) => s.copy(b = v))
+        val cL = Lens[ABCD, String](_.c, (s, v) => s.copy(c = v))
+        val dL = Lens[ABCD, String](_.d, (s, v) => s.copy(d = v))
+        val abcdL = aL * bL * cL * dL
+
+        val abcd = ABCD("a", "b", "c", "d")
+        (abcdL(abcd) must_== ("a", "b", "c", "d")) and
+        (abcdL(abcd, ("e", "f", "g", "h")) must_== ABCD("e", "f", "g", "h"))
       }
 
 }
