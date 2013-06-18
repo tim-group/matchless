@@ -95,5 +95,16 @@ object Lenses {
     def reduction[B](reduction: Reduction[A, B]) = reduction
     def lens[B](projection: Projection[A, B], reduction: Reduction[A, B]): Lens[A, B] = Lens(projection, reduction)
   }
+  
+  def itemL[A](index: Int): Lens[Seq[A], A] = Lens[Seq[A], A](_(index), (s, v) => s.zipWithIndex.map {
+    case (a, i) => if (i == index) v else a
+  })
+  
+  def valueForL[K, V](key: K): Lens[Map[K, V], V] = Lens[Map[K, V], V](_(key), (s, v) => s + (key -> v))
+  
+  def predL[A](pred: Function[A, Boolean]): Lens[Traversable[A], A] = Lens[Traversable[A], A](
+      s      => s.find(pred).get,
+      (s, v) => s.map(i => if (pred(i)) v else i)
+  )
 
 }

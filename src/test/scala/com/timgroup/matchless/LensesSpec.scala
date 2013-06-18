@@ -3,6 +3,7 @@ package com.timgroup.matchless
 import org.specs2.Specification
 import com.timgroup.matchless.utils.Lenses._
 import PropertyMatchers._
+import Composition._
 
 class LensesSpec extends Specification {
 
@@ -52,10 +53,10 @@ class LensesSpec extends Specification {
       } ^
       "Lens monads compose" ! {
         val combined = (for {
-          i      <- barL
+          i <- barL
           aIsFor <- (bazP ~ charAt(1))
         } yield aIsFor + i.toString) ! _
-        
+
         (for {
           c <- combined
           baz <- bazL
@@ -64,7 +65,7 @@ class LensesSpec extends Specification {
       "Lenses have products" ! {
         val fooAndBazL = barL * bazL
         (fooAndBazL(foo) must_== (1, "apple")) and
-        (fooAndBazL(foo, (2, "pear")) must_== Foo(2, "pear"))
+          (fooAndBazL(foo, (2, "pear")) must_== Foo(2, "pear"))
       } ^
       "Lenses have 3-products" ! {
         case class ABC(a: String, b: String, c: String)
@@ -72,10 +73,10 @@ class LensesSpec extends Specification {
         val bL = Lens[ABC, String](_.b, (s, v) => s.copy(b = v))
         val cL = Lens[ABC, String](_.c, (s, v) => s.copy(c = v))
         val abcL = aL * bL * cL
-        
+
         val abc = ABC("a", "b", "c")
         (abcL(abc) must_== ("a", "b", "c")) and
-        (abcL(abc, ("d", "e", "f")) must_== ABC("d", "e", "f"))
+          (abcL(abc, ("d", "e", "f")) must_== ABC("d", "e", "f"))
       } ^
       "Lenses have 4-products" ! {
         case class ABCD(a: String, b: String, c: String, d: String)
@@ -87,7 +88,31 @@ class LensesSpec extends Specification {
 
         val abcd = ABCD("a", "b", "c", "d")
         (abcdL(abcd) must_== ("a", "b", "c", "d")) and
-        (abcdL(abcd, ("e", "f", "g", "h")) must_== ABCD("e", "f", "g", "h"))
+          (abcdL(abcd, ("e", "f", "g", "h")) must_== ABCD("e", "f", "g", "h"))
+      } ^
+      "itemL is a lens into any sequence" ! {
+        val thirdL = itemL[Int](2)
+        allOf(
+          thirdL(List(1, 2, 3, 4)) must_== 3,
+          thirdL(Seq(1, 2, 3, 4)) must_== 3,
+          thirdL(Stream(1, 2, 3, 4)) must_== 3,
+          thirdL(Stream(1, 2, 3, 4), 7) must_== Stream(1, 2, 7, 4)
+        )
+      } ^
+      "valueForL is a lens into any map" ! {
+        val fooL = valueForL[String, Int]("foo")
+        val map = Map("foo" -> 23, "bar" -> 42)
+        allOf(
+          fooL(map) must_== 23,
+          fooL(map, 74) must_== Map("foo" -> 74, "bar" -> 42)
+        )
+      } ^
+      "predL is a lens into any traversable" ! {
+        val nonZeroL = predL[Int](_ != 0)
+        val values = Set(0, 1)
+        allOf(
+          nonZeroL(values) must_== 1,
+          nonZeroL(values, 2) must_== Set(0, 2)
+        )
       }
-
 }
