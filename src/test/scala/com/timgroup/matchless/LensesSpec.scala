@@ -20,10 +20,10 @@ class LensesSpec extends Specification {
   def is =
     "Lenses are composable" ! {
       (barP(foo) must_== 1) and
-        ((bazP ~ charAt(2))(foo) must_== 'p') and
+        ((bazP >> charAt(2))(foo) must_== 'p') and
         (barL.update(foo, _ + 1) must_== Foo(2, "apple")) and
         (foo must haveProperty("bar", barP, 1)) and
-        (foo must haveProperty("fourth character of baz", bazP ~ charAt(3), 'l'))
+        (foo must haveProperty("fourth character of baz", bazP >> charAt(3), 'l'))
     } ^
       "Readers are bindable" ! {
         val bound = bazP.bind(foo)
@@ -54,7 +54,7 @@ class LensesSpec extends Specification {
       "Lens monads compose" ! {
         val combined = (for {
           i <- barL
-          aIsFor <- (bazP ~ charAt(1))
+          aIsFor <- (bazP >> charAt(1))
         } yield aIsFor + i.toString) ! _
 
         (for {
@@ -63,7 +63,7 @@ class LensesSpec extends Specification {
         } yield (c, baz)) ! foo must_== ("p1", "apple")
       } ^
       "Lenses have products" ! {
-        val fooAndBazL = barL * bazL
+        val fooAndBazL = (barL, bazL)
         (fooAndBazL(foo) must_== (1, "apple")) and
           (fooAndBazL(foo, (2, "pear")) must_== Foo(2, "pear"))
       } ^
@@ -72,7 +72,7 @@ class LensesSpec extends Specification {
         val aL = Lens[ABC, String](_.a, (s, v) => s.copy(a = v))
         val bL = Lens[ABC, String](_.b, (s, v) => s.copy(b = v))
         val cL = Lens[ABC, String](_.c, (s, v) => s.copy(c = v))
-        val abcL = aL * bL * cL
+        val abcL = (aL, bL, cL)
 
         val abc = ABC("a", "b", "c")
         (abcL(abc) must_== ("a", "b", "c")) and
@@ -84,7 +84,7 @@ class LensesSpec extends Specification {
         val bL = Lens[ABCD, String](_.b, (s, v) => s.copy(b = v))
         val cL = Lens[ABCD, String](_.c, (s, v) => s.copy(c = v))
         val dL = Lens[ABCD, String](_.d, (s, v) => s.copy(d = v))
-        val abcdL = aL * bL * cL * dL
+        val abcdL = (aL, bL, cL, dL)
 
         val abcd = ABCD("a", "b", "c", "d")
         (abcdL(abcd) must_== ("a", "b", "c", "d")) and

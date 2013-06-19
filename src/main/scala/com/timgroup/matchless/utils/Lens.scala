@@ -11,7 +11,7 @@ object Lenses {
   type Update[A] = A => A
   
   sealed case class EnrichedProjection[A, B](projection: Projection[A, B]) {
-    def ~[C](other: Projection[B, C]): Projection[A, C] = projection andThen other
+    def >>[C](other: Projection[B, C]): Projection[A, C] = projection andThen other
     def bind(target: A): Projectable[B] = () => projection(target)
     def reducingWith(reduction: Reduction[A, B]): Lens[A, B] = Lens(projection, reduction)
   }
@@ -38,12 +38,11 @@ object Lenses {
 
     def update(target: A, update: Update[B]): A = reduction(target, update(projection(target)))
 
-    def ~[C](other: Projection[B, C]): Projection[A, C] = projection ~ other
-    def ~[C](reduction: Reduction[B, C]): Reduction[A, C] = (target: A, newValue: C) =>
+    def >>[C](other: Projection[B, C]): Projection[A, C] = projection >> other
+    def >>[C](reduction: Reduction[B, C]): Reduction[A, C] = (target: A, newValue: C) =>
       update(target, target2 => reduction(target2, newValue))
 
-    def ~[C](lens: Lens[B, C]): Lens[A, C] = (this ~ lens.projection, this ~ lens.reduction)
-    def *[C](lens: Lens[A, C]): Lens2[A, B, C] = Lens2[A, B, C](this, lens)
+    def >>[C](lens: Lens[B, C]): Lens[A, C] = (this >> lens.projection, this >> lens.reduction)
 
     def bind(target: A): Cell[A, B] = Cell(target, this)
     
@@ -51,36 +50,30 @@ object Lenses {
     def /=(updater: Update[B]) = state((s: A) => (update(s, updater), ()))
   }
   
-  trait Lensable[A, B] {
-    def toLens: Lens[A, B]
-  }
+  implicit def lens2[A, B, C](lenses: (Lens[A, B], Lens[A, C])): Lens[A, (B, C)] = Lens[A, (B, C)](
+    s      => (lenses._1(s), lenses._2(s)),
+    (s, v) => (lenses._2(lenses._1(s, v._1), v._2))
+  )
   
-  sealed case class Lens2[A, B, C](left: Lens[A, B], right: Lens[A, C]) extends Lensable[A, (B, C)] {
-    def *[D](lens: Lens[A, D]): Lens3[A, B, C, D] = Lens3[A, B, C, D](left, right, lens)
-    override def toLens: Lens[A, (B, C)] = Lens[A, (B, C)](
-      s      => (left(s), right(s)),
-      (s, v) => (right(left(s, v._1), v._2))
-    )
-  }
+  implicit def lens3[A, B, C, D](lenses: (Lens[A, B], Lens[A, C], Lens[A, D])): Lens[A, (B, C, D)] = Lens[A, (B, C, D)](
+    s      => (lenses._1(s), lenses._2(s), lenses._3(s)),
+    (s, v) => (lenses._3(lenses._2(lenses._1(s, v._1), v._2), v._3))
+  )
   
-  sealed case class Lens3[A, B, C, D](left: Lens[A, B], middle: Lens[A, C], right: Lens[A, D]) extends Lensable[A, (B, C, D)] {
-   def *[E](lens: Lens[A, E]): Lens4[A, B, C, D, E] = Lens4[A, B, C, D, E](left, middle, right, lens)
-   override def toLens: Lens[A, (B, C, D)] = Lens[A, (B, C, D)](
-      s      => (left(s), middle(s), right(s)),
-      (s, v) => (right(middle(left(s, v._1), v._2), v._3))
-    )
-  }
+  implicit def lens3[A, B, C, D, E](lenses: (Lens[A, B], Lens[A, C], Lens[A, D], Lens[A, E])): Lens[A, (B, C, D, E)] = Lens[A, (B, C, D, E)](
+    s      => (lenses._1(s), lenses._2(s), lenses._3(s), lenses._4(s)),
+    (s, v) => (lenses._4(lenses._3(lenses._2(lenses._1(s, v._1), v._2), v._3), v._4))
+  )
   
-  sealed case class Lens4[A, B, C, D, E](lens1: Lens[A, B], lens2: Lens[A, C], lens3: Lens[A, D], lens4: Lens[A, E])
-   extends Lensable[A, (B, C, D, E)] {
-   override def toLens: Lens[A, (B, C, D, E)] = Lens[A, (B, C, D, E)](
-      s      => (lens1(s), lens2(s), lens3(s), lens4(s)),
-      (s, v) => (lens4(lens3(lens2(lens1(s, v._1), v._2), v._3), v._4))
-    )
-  }
+  implicit def projection2[A, B, C](projections: (Projection[A, B], Projection[A, C])): Projection[A, (B, C)] =
+    s      => (projections._1(s), projections._2(s))
+    
+  implicit def projection3[A, B, C, D](projections: (Projection[A, B], Projection[A, C], Projection[A, D])): Projection[A, (B, C, D)] =
+    s      => (projections._1(s), projections._2(s), projections._3(s))
+    
+  implicit def projection4[A, B, C, D, E](projections: (Projection[A, B], Projection[A, C], Projection[A, D], Projection[A, E])): Projection[A, (B, C, D, E)] =
+    s      => (projections._1(s), projections._2(s), projections._3(s), projections._4(s))
   
-  implicit def LensableToLens[A, B](lensable: Lensable[A, B]): Lens[A, B] = lensable.toLens 
-      
   implicit def projection2State[A, B](projection: A => B): State[A, B] = state((s: A) => (s, projection(s)))
   
   sealed case class Cell[A, B](target: A, lens: Lens[A, B]) extends Projectable[B] with Reducible[A, B] {
